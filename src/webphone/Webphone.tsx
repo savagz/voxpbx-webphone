@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   Delete,
   Grid3x3,
@@ -17,6 +17,7 @@ import {
 import styles from './Webphone.module.css';
 import { useWebphone } from './useWebphone';
 import { WebphoneConfigDefaults, type WebphoneConfig } from './config';
+import { LANGUAGES, isLanguage, translate, type Language, type TranslationKey } from './i18n';
 
 const DIAL_KEYS: { key: string; letters?: string }[] = [
   { key: '1' },
@@ -68,34 +69,35 @@ function SettingsModal({
   onSave: (next: WebphoneConfig) => void;
 }) {
   const [form, setForm] = useState(config);
+  const t = (key: TranslationKey) => translate(form.language, key);
 
   return (
     <div className={styles.modalOverlay}>
       <div className={styles.modal}>
         <div className={styles.modalHeader}>
-          <h3>Configuración</h3>
-          <button className={styles.closeBtn} type="button" onClick={onClose} aria-label="Cerrar">
+          <h3>{t('settings')}</h3>
+          <button className={styles.closeBtn} type="button" onClick={onClose} aria-label={t('close')}>
             <X size={14} />
           </button>
         </div>
         <div className={styles.formGroup}>
-          <label>Servidor (WSS)</label>
+          <label>{t('server')}</label>
           <input
             value={form.server}
             onChange={(e) => setForm({ ...form, server: e.target.value })}
-            placeholder="wss://servidor:8089/ws"
+            placeholder={t('serverPlaceholder')}
           />
         </div>
         <div className={styles.formGroup}>
-          <label>Dominio</label>
+          <label>{t('domain')}</label>
           <input
             value={form.domain}
             onChange={(e) => setForm({ ...form, domain: e.target.value })}
-            placeholder="dominio.com"
+            placeholder={t('domainPlaceholder')}
           />
         </div>
         <div className={styles.formGroup}>
-          <label>Extensión</label>
+          <label>{t('extension')}</label>
           <input
             value={form.username}
             onChange={(e) => setForm({ ...form, username: e.target.value })}
@@ -103,7 +105,7 @@ function SettingsModal({
           />
         </div>
         <div className={styles.formGroup}>
-          <label>Contraseña</label>
+          <label>{t('password')}</label>
           <input
             type="password"
             value={form.password}
@@ -111,8 +113,24 @@ function SettingsModal({
             placeholder="••••••"
           />
         </div>
+        <div className={styles.formGroup}>
+          <label>{t('language')}</label>
+          <select
+            value={form.language}
+            onChange={(e) => {
+              const language: Language = isLanguage(e.target.value) ? e.target.value : 'en';
+              setForm({ ...form, language });
+            }}
+          >
+            {LANGUAGES.map(({ code, label }) => (
+              <option key={code} value={code}>
+                {label}
+              </option>
+            ))}
+          </select>
+        </div>
         <button className={styles.saveBtn} type="button" onClick={() => onSave(form)}>
-          Guardar
+          {t('save')}
         </button>
       </div>
     </div>
@@ -120,22 +138,25 @@ function SettingsModal({
 }
 
 function TransferModal({
+  language,
   onClose,
   onTransfer,
 }: {
+  language: Language;
   onClose: () => void;
   onTransfer: (target: string) => Promise<void>;
 }) {
   const [target, setTarget] = useState('');
   const [error, setError] = useState('');
   const [sending, setSending] = useState(false);
+  const t = (key: TranslationKey) => translate(language, key);
 
   const submit = () => {
     setSending(true);
     setError('');
     onTransfer(target)
       .then(onClose)
-      .catch((err: Error) => setError(err.message || 'No se pudo transferir'))
+      .catch((err: Error) => setError(err.message || t('transferFailed')))
       .finally(() => setSending(false));
   };
 
@@ -143,13 +164,13 @@ function TransferModal({
     <div className={styles.modalOverlay}>
       <div className={styles.modal}>
         <div className={styles.modalHeader}>
-          <h3>Transferir llamada</h3>
-          <button className={styles.closeBtn} type="button" onClick={onClose} aria-label="Cerrar">
+          <h3>{t('transferCall')}</h3>
+          <button className={styles.closeBtn} type="button" onClick={onClose} aria-label={t('close')}>
             <X size={14} />
           </button>
         </div>
         <div className={styles.formGroup}>
-          <label>Número o extensión destino</label>
+          <label>{t('transferTarget')}</label>
           <input
             value={target}
             onChange={(e) => setTarget(e.target.value)}
@@ -159,7 +180,7 @@ function TransferModal({
         </div>
         {error && <p className={styles.errorText}>{error}</p>}
         <button className={styles.saveBtn} type="button" onClick={submit} disabled={!target.trim() || sending}>
-          {sending ? 'Transfiriendo…' : 'Transferir'}
+          {sending ? t('transferring') : t('transfer')}
         </button>
       </div>
     </div>
@@ -168,6 +189,8 @@ function TransferModal({
 
 export default function Webphone() {
   const phone = useWebphone();
+  const language = phone.config.language;
+  const t = (key: TranslationKey) => translate(language, key);
   const [showSettings, setShowSettings] = useState(false);
   const [showKeypad, setShowKeypad] = useState(false);
   const [showTransfer, setShowTransfer] = useState(false);
@@ -175,6 +198,10 @@ export default function Webphone() {
   const inCall = phone.callMode === 'connected' || phone.callMode === 'outgoing';
   const incoming = phone.callMode === 'incoming';
   const connected = phone.callMode === 'connected';
+
+  useEffect(() => {
+    document.documentElement.lang = language;
+  }, [language]);
 
   if (!connected && showKeypad) setShowKeypad(false);
   if (!connected && showTransfer) setShowTransfer(false);
@@ -190,7 +217,7 @@ export default function Webphone() {
           <>
             <div className={styles.callHeader}>
               <span className={styles.liveDot} />
-              <span>{incoming ? 'Llamada entrante' : phone.status === 'calling' ? 'Llamando…' : 'Llamada en curso'}</span>
+              <span>{incoming ? t('incomingCall') : phone.status === 'calling' ? t('calling') : t('callInProgress')}</span>
               {phone.callMode === 'connected' && <span className={styles.callTimer}>{phone.elapsedLabel}</span>}
             </div>
 
@@ -218,7 +245,7 @@ export default function Webphone() {
               </div>
             )}
 
-            <div className={styles.callerName}>{phone.callerName || phone.phoneNumber || 'Desconocido'}</div>
+            <div className={styles.callerName}>{phone.callerName || phone.phoneNumber || t('unknown')}</div>
             <div className={styles.callerNumber}>{phone.phoneNumber}</div>
 
             {!incoming && (
@@ -232,7 +259,7 @@ export default function Webphone() {
                   <span className={styles.controlIcon}>
                     <MicOff size={20} />
                   </span>
-                  Silencio
+                  {t('mute')}
                 </button>
                 <button
                   className={styles.controlBtn}
@@ -244,7 +271,7 @@ export default function Webphone() {
                   <span className={styles.controlIcon}>
                     <Grid3x3 size={20} />
                   </span>
-                  Teclado
+                  {t('keypad')}
                 </button>
                 <button
                   className={styles.controlBtn}
@@ -255,13 +282,13 @@ export default function Webphone() {
                   <span className={styles.controlIcon}>
                     <Volume2 size={20} />
                   </span>
-                  Altavoz
+                  {t('speaker')}
                 </button>
                 <button className={styles.controlBtn} type="button" disabled>
                   <span className={styles.controlIcon}>
                     <UserPlus size={20} />
                   </span>
-                  Añadir
+                  {t('add')}
                 </button>
                 <button
                   className={styles.controlBtn}
@@ -272,7 +299,7 @@ export default function Webphone() {
                   <span className={styles.controlIcon}>
                     <ArrowLeftRight size={20} />
                   </span>
-                  Transferir
+                  {t('transfer')}
                 </button>
                 <button
                   className={styles.controlBtn}
@@ -284,7 +311,7 @@ export default function Webphone() {
                   <span className={styles.controlIcon}>
                     <Pause size={20} />
                   </span>
-                  Retener
+                  {t('hold')}
                 </button>
               </div>
             )}
@@ -295,7 +322,7 @@ export default function Webphone() {
                   className={`${styles.callBtn} ${styles.acceptBtn}`}
                   type="button"
                   onClick={phone.accept}
-                  aria-label="Contestar"
+                  aria-label={t('answer')}
                 >
                   <Phone size={24} />
                 </button>
@@ -304,7 +331,7 @@ export default function Webphone() {
                 className={`${styles.callBtn} ${styles.hangupBtn}`}
                 type="button"
                 onClick={incoming ? phone.reject : phone.hangup}
-                aria-label={incoming ? 'Rechazar' : 'Colgar'}
+                aria-label={incoming ? t('reject') : t('hangUp')}
               >
                 <PhoneOff size={24} />
               </button>
@@ -318,13 +345,13 @@ export default function Webphone() {
               <span className={styles.headerIcon}>
                 <Phone size={20} />
               </span>
-              <span className={styles.headerTitle}>Realizar llamada</span>
+              <span className={styles.headerTitle}>{t('makeCall')}</span>
               <span className={styles.statusDot} data-status={phone.status} />
               <button
                 className={styles.settingsBtn}
                 type="button"
                 onClick={() => setShowSettings(true)}
-                aria-label="Configuración"
+                aria-label={t('settings')}
               >
                 <Settings size={15} />
               </button>
@@ -332,14 +359,14 @@ export default function Webphone() {
 
             <div className={styles.display}>
               <span className={styles.displayText} data-empty={!phone.phoneNumber}>
-                {phone.phoneNumber || 'Ingrese número o extensión...'}
+                {phone.phoneNumber || t('enterNumber')}
               </span>
               <button
                 className={styles.backspaceBtn}
                 type="button"
                 onClick={phone.backspace}
                 disabled={!phone.phoneNumber}
-                aria-label="Borrar"
+                aria-label={t('delete')}
               >
                 <Delete size={16} />
               </button>
@@ -360,7 +387,7 @@ export default function Webphone() {
                 type="button"
                 onClick={phone.call}
                 disabled={!phone.phoneNumber || phone.status !== 'registered'}
-                aria-label="Llamar"
+                aria-label={t('call')}
               >
                 <Phone size={24} />
               </button>
@@ -376,7 +403,7 @@ export default function Webphone() {
                 <span className={styles.footerIcon}>
                   <Volume2 size={18} />
                 </span>
-                Altavoz
+                {t('speaker')}
               </button>
               <button
                 className={styles.footerBtn}
@@ -387,13 +414,13 @@ export default function Webphone() {
                 <span className={styles.footerIcon}>
                   <MicOff size={18} />
                 </span>
-                Silencio
+                {t('mute')}
               </button>
               <button className={styles.footerBtn} type="button" onClick={() => setShowSettings(true)}>
                 <span className={styles.footerIcon}>
                   <MoreHorizontal size={18} />
                 </span>
-                Más
+                {t('more')}
               </button>
             </div>
           </>
@@ -412,6 +439,7 @@ export default function Webphone() {
 
         {showTransfer && (
           <TransferModal
+            language={language}
             onClose={() => setShowTransfer(false)}
             onTransfer={phone.transferCall}
           />

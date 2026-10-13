@@ -1,9 +1,12 @@
+import { isLanguage, type Language } from './i18n';
+
 export type WebphoneConfig = {
   server: string;
   domain: string;
   username: string;
   password: string;
   displayName: string;
+  language: Language;
   echoCancellation: boolean;
   noiseSuppression: boolean;
   autoGainControl: boolean;
@@ -17,6 +20,7 @@ export const WebphoneConfigDefaults: WebphoneConfig = {
   username: '',
   password: '',
   displayName: 'Webphone',
+  language: 'en',
   echoCancellation: true,
   noiseSuppression: true,
   autoGainControl: true,
@@ -39,6 +43,7 @@ export function loadWebphoneConfig(): WebphoneConfig {
     const merged = { ...base, ...parsed };
     if (!parsed.server) merged.server = base.server;
     if (!parsed.domain) merged.domain = base.domain;
+    if (!isLanguage(merged.language)) merged.language = base.language;
     return merged;
   } catch {
     return base;

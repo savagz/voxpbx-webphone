@@ -23,6 +23,7 @@ When the app opens, use the gear icon (dial screen) or the "More" button to ente
 - Domain
 - Extension
 - Password
+- Language (English or Spanish; English by default)
 
 Settings are stored in the browser's `localStorage` (`voxpbx_webphone_config`). There is no dedicated backend: point the WSS server directly at your Asterisk/VOXPBX.
 
@@ -30,4 +31,5 @@ Settings are stored in the browser's `localStorage` (`voxpbx_webphone_config`). 
 
 - `src/webphone/useWebphone.ts` — SIP logic (registration, outgoing/incoming calls, mute, speaker, connection statistics via WebRTC).
 - `src/webphone/Webphone.tsx` — UI: dial screen and in-call screen.
+- `src/webphone/i18n.ts` — translations (EN/ES) and the language list.
 - `src/webphone/config.ts` — settings persistence in `localStorage`.

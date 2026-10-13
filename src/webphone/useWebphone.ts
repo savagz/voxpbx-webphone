@@ -6,7 +6,8 @@ import {
   saveWebphoneConfig,
   type WebphoneConfig,
 } from './config';
-import { playDtmfTone, startBusyTone, startRingtone, stopBusyTone, stopRingtone } from './tones';
+import { translate } from './i18n';
+import { playDtmfTone,startBusyTone, startRingtone, stopBusyTone, stopRingtone } from './tones';
 
 export type WebphoneStatus = 'disconnected' | 'registering' | 'registered' | 'ringing' | 'calling' | 'connected';
 export type WebphoneCallMode = 'idle' | 'incoming' | 'outgoing' | 'connected';
@@ -469,11 +470,11 @@ export function useWebphone() {
     const session = sessionRef.current;
     const number = target.trim();
     if (!session || callMode !== 'connected' || !session.refer || !number) {
-      return Promise.reject(new Error('Transferencia no disponible'));
+      return Promise.reject(new Error(translate(config.language, 'transferUnavailable')));
     }
 
     const referTarget = SIP.UserAgent.makeURI(`sip:${number}@${config.domain}`);
-    if (!referTarget) return Promise.reject(new Error('Número inválido'));
+    if (!referTarget) return Promise.reject(new Error(translate(config.language, 'invalidNumber')));
 
     return session
       .refer(referTarget, {
@@ -482,7 +483,7 @@ export function useWebphone() {
         },
       })
       .then(() => undefined);
-  }, [callMode, config.domain, hangup]);
+  }, [callMode, config.domain, config.language, hangup]);
 
   const updateConfig = useCallback((next: WebphoneConfig) => {
     saveWebphoneConfig(next);

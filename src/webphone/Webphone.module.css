@@ -534,7 +534,8 @@
   font-weight: 600;
 }
 
-.formGroup input {
+.formGroup input,
+.formGroup select {
   width: 100%;
   padding: 9px 10px;
   border-radius: 10px;
@@ -544,10 +545,15 @@
   font-size: 13px;
 }
 
-.formGroup input:focus {
+.formGroup input:focus,
+.formGroup select:focus {
   outline: none;
   border-color: rgba(108, 178, 255, 0.6);
   box-shadow: 0 0 0 3px rgba(108, 178, 255, 0.18);
+}
+
+.formGroup select option {
+  color: #111;
 }
 
 .saveBtn {
