@@ -22,15 +22,26 @@ export const WebphoneConfigDefaults: WebphoneConfig = {
   autoGainControl: true,
 };
 
+function hostDefaults(): Pick<WebphoneConfig, 'server' | 'domain'> {
+  const host = typeof window !== 'undefined' ? window.location.hostname : '';
+  if (!host) return { server: WebphoneConfigDefaults.server, domain: WebphoneConfigDefaults.domain };
+  const hostname = host.includes(':') ? `[${host}]` : host;
+  return { server: `wss://${hostname}:8089/ws`, domain: host };
+}
+
 export function loadWebphoneConfig(): WebphoneConfig {
-  if (typeof window === 'undefined') return { ...WebphoneConfigDefaults };
+  const base = { ...WebphoneConfigDefaults, ...hostDefaults() };
+  if (typeof window === 'undefined') return base;
   try {
     const raw = window.localStorage.getItem(STORAGE_KEY);
-    if (!raw) return { ...WebphoneConfigDefaults };
+    if (!raw) return base;
     const parsed = JSON.parse(raw) as Partial<WebphoneConfig>;
-    return { ...WebphoneConfigDefaults, ...parsed };
+    const merged = { ...base, ...parsed };
+    if (!parsed.server) merged.server = base.server;
+    if (!parsed.domain) merged.domain = base.domain;
+    return merged;
   } catch {
-    return { ...WebphoneConfigDefaults };
+    return base;
   }
 }
 
