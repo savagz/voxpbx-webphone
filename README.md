@@ -1,8 +1,8 @@
 # VOXPBX Webphone
 
-Softphone SIP standalone (React + TS + Vite) basado en `sip.js`, con interfaz calcada de `design/WEBPhone.png` — sin botón de video.
+Standalone SIP softphone (React + TS + Vite) built on `sip.js`, with an interface closely modeled on `design/WEBPhone.png`, without a video button.
 
-## Desarrollo
+## Development
 
 ```bash
 npm install
@@ -15,19 +15,19 @@ npm run dev
 npm run build
 ```
 
-## Configuración de conexión SIP
+## SIP connection settings
 
-Al abrir la app, usa el icono de engranaje (pantalla de marcado) o el botón "Más" para introducir:
+When the app opens, use the gear icon (dial screen) or the "More" button to enter:
 
-- Servidor (WSS), p. ej. `wss://tu-pbx:8089/ws`
-- Dominio
-- Extensión
-- Contraseña
+- Server (WSS), e.g. `wss://your-pbx:8089/ws`
+- Domain
+- Extension
+- Password
 
-La configuración se guarda en `localStorage` del navegador (`voxpbx_webphone_config`). No hay backend propio: apunta el servidor WSS directamente a tu Asterisk/VOXPBX.
+Settings are stored in the browser's `localStorage` (`voxpbx_webphone_config`). There is no dedicated backend: point the WSS server directly at your Asterisk/VOXPBX.
 
-## Estructura
+## Structure
 
-- `src/webphone/useWebphone.ts` — lógica SIP (registro, llamada saliente/entrante, mute, altavoz, estadísticas de conexión vía WebRTC).
-- `src/webphone/Webphone.tsx` — UI: pantalla de marcado y pantalla de llamada en curso.
-- `src/webphone/config.ts` — persistencia de configuración en `localStorage`.
+- `src/webphone/useWebphone.ts` — SIP logic (registration, outgoing/incoming calls, mute, speaker, connection statistics via WebRTC).
+- `src/webphone/Webphone.tsx` — UI: dial screen and in-call screen.
+- `src/webphone/config.ts` — settings persistence in `localStorage`.
